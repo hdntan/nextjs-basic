@@ -24,3 +24,11 @@ export const RegisterSchema = z.object({
 })
 
 export type RegisterType =  z.infer<typeof RegisterSchema>
+
+
+export const LoginSchema = z.object({
+    email: z.string().email(),
+    password: z.string().trim().min(6).max(100)
+}).strict()
+
+export type LoginType = z.infer<typeof LoginSchema>
