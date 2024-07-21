@@ -38,7 +38,6 @@ const LoginForm = () => {
         },
         body: JSON.stringify(values),
       }).then(async (res) => {
-        console.log("🚀 ~ ).then ~ res:", res);
         const payload = await res.json();
 
         const data = {
@@ -61,7 +60,6 @@ const LoginForm = () => {
         },
         body: JSON.stringify(result),
       }).then(async (res) => {
-        console.log("🚀 ~ ).then ~ res:", res);
         const payload = await res.json();
 
         const data = {
