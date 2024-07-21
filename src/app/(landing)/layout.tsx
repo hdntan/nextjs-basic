@@ -4,6 +4,8 @@ import "@/app/globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import Header from "@/components/common/Header";
 import { Toaster } from "@/components/ui/toaster";
+import AppProvider from "@/app/AppProvider";
+import { cookies } from "next/headers";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -17,8 +19,12 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+
+
+  const cookieStore = cookies()
+  const sessionToken = cookieStore.get('sessionToken')
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning={true}>
       <body className={inter.className}>
       <Toaster />
 
@@ -28,8 +34,12 @@ export default function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
+
+            <AppProvider initialSessionToken={sessionToken?.value}>
             <Header/>
             {children}
+            </AppProvider>
+           
           </ThemeProvider>
       </body>
     </html>

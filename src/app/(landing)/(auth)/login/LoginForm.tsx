@@ -31,7 +31,7 @@ const LoginForm = () => {
 
   async function onSubmit(values: LoginType) {
     try {
-      const response = await fetch(`${envConfig.NEXT_PUBLIC_API}/auth/login`, {
+      const result = await fetch(`${envConfig.NEXT_PUBLIC_API}/auth/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -51,8 +51,31 @@ const LoginForm = () => {
         return data;
       });
       toast({
-        description: response.payload.message,
+        description: result.payload.message,
       });
+
+      const resultFromNextServer = await fetch('/api/auth',{
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(result),
+      }).then(async (res) => {
+        console.log("🚀 ~ ).then ~ res:", res);
+        const payload = await res.json();
+
+        const data = {
+          status: res.status,
+          payload,
+        };
+        if (!res.ok) {
+          throw data;
+        }
+        return data;
+      });
+
+      console.log(resultFromNextServer)
+
     } catch (error: any) {
       const errors = error.payload.errors as {
         field: string;
