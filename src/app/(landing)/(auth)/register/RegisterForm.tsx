@@ -17,11 +17,21 @@ import { Input } from "@/components/ui/input";
 import {
   RegisterSchema,
   RegisterType,
-} from "@/schemaValidations/account.schema";
+} from "@/schemaValidations/auth.schema";
 import { error } from "console";
 import envConfig from "@/config";
+import authApiRequest from "@/apiRequest/auth";
+import { useToast } from "@/components/ui/use-toast";
+import { useRouter } from "next/navigation";
+import { clientSessionToken } from "@/lib/http";
+
 
 const RegisterForm = () => {
+
+  const { toast } = useToast();
+  const route = useRouter();
+
+
   const form = useForm<RegisterType>({
     resolver: zodResolver(RegisterSchema),
     defaultValues: {
@@ -32,20 +42,51 @@ const RegisterForm = () => {
     },
   });
 
+  // async function onSubmit(values: RegisterType) {
+  //   // Do something with the form values.
+  //   // ✅ This will be type-safe and validated.
+  // const result = await authApiRequest.register(values)
+
+  // toast({
+  //   description: result.payload.message,
+  // });
+  
+  // }
+
+  
   async function onSubmit(values: RegisterType) {
-    // Do something with the form values.
-    // ✅ This will be type-safe and validated.
-    const response = await fetch(`${envConfig.NEXT_PUBLIC_API}/auth/register`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(values),
+    try {
+      const result = await authApiRequest.register(values);
+      toast({
+        description: result.payload.message,
+      });
+
+      await authApiRequest.auth({ sessionToken: result.payload.data.token });
+      // setSessionToken(result.payload.data.token);
+      clientSessionToken.value = result.payload.data.token
+      route.push("/me")
+    } catch (error: any) {
+      const errors = error.payload.errors as {
+        field: string;
+        message: string;
+      }[];
+      const status = error.status as number;
+
+      if (status === 422) {
+        errors.forEach((error) => {
+          form.setError(error.field as "email" | "password", {
+            type: "server",
+            message: error.message,
+          });
+        });
+      } else {
+        toast({
+          description: error.payload.message,
+        });
       }
-    ).then((res) => res.json())
-    
-    console.log(response);
+    }
   }
+
 
   return (
     <Form {...form}>
