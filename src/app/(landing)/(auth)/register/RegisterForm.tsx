@@ -14,23 +14,16 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import {
-  RegisterSchema,
-  RegisterType,
-} from "@/schemaValidations/auth.schema";
+import { RegisterSchema, RegisterType } from "@/schemaValidations/auth.schema";
 import { error } from "console";
 import envConfig from "@/config";
 import authApiRequest from "@/apiRequest/auth";
 import { useToast } from "@/components/ui/use-toast";
 import { useRouter } from "next/navigation";
-import { clientSessionToken } from "@/lib/http";
-
 
 const RegisterForm = () => {
-
   const { toast } = useToast();
   const route = useRouter();
-
 
   const form = useForm<RegisterType>({
     resolver: zodResolver(RegisterSchema),
@@ -50,10 +43,9 @@ const RegisterForm = () => {
   // toast({
   //   description: result.payload.message,
   // });
-  
+
   // }
 
-  
   async function onSubmit(values: RegisterType) {
     try {
       const result = await authApiRequest.register(values);
@@ -62,9 +54,8 @@ const RegisterForm = () => {
       });
 
       await authApiRequest.auth({ sessionToken: result.payload.data.token });
-      // setSessionToken(result.payload.data.token);
-      clientSessionToken.value = result.payload.data.token
-      route.push("/me")
+
+      route.push("/me");
     } catch (error: any) {
       const errors = error.payload.errors as {
         field: string;
@@ -87,12 +78,11 @@ const RegisterForm = () => {
     }
   }
 
-
   return (
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit(onSubmit, (error) => {
-            console.log(error);
+          console.log(error);
         })}
         className="space-y-3 w-[700px] flex-shrink-0"
         noValidate

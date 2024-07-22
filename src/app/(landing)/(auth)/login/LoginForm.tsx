@@ -19,7 +19,7 @@ import envConfig from "@/config";
 import { useToast } from "@/components/ui/use-toast";
 import authApiRequest from "@/apiRequest/auth";
 import { useRouter } from "next/navigation";
-import { clientSessionToken } from "@/lib/http";
+
 
 const LoginForm = () => {
   const { toast } = useToast();
@@ -42,7 +42,7 @@ const route = useRouter()
       });
 
       await authApiRequest.auth({ sessionToken: result.payload.data.token });
-      clientSessionToken.value = result.payload.data.token;
+     
       route.push("/me")
     } catch (error: any) {
       const errors = error.payload.errors as {
