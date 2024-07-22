@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 
@@ -15,15 +15,17 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { RegisterSchema, RegisterType } from "@/schemaValidations/auth.schema";
-import { error } from "console";
-import envConfig from "@/config";
 import authApiRequest from "@/apiRequest/auth";
 import { useToast } from "@/components/ui/use-toast";
 import { useRouter } from "next/navigation";
+import { handleErrorApi } from "@/lib/utils";
 
 const RegisterForm = () => {
   const { toast } = useToast();
   const route = useRouter();
+  const [loading, setLoading] = useState<boolean>(false)
+
+
 
   const form = useForm<RegisterType>({
     resolver: zodResolver(RegisterSchema),
@@ -47,6 +49,8 @@ const RegisterForm = () => {
   // }
 
   async function onSubmit(values: RegisterType) {
+    if(loading) return; 
+    setLoading(true);
     try {
       const result = await authApiRequest.register(values);
       toast({
@@ -57,24 +61,9 @@ const RegisterForm = () => {
 
       route.push("/me");
     } catch (error: any) {
-      const errors = error.payload.errors as {
-        field: string;
-        message: string;
-      }[];
-      const status = error.status as number;
-
-      if (status === 422) {
-        errors.forEach((error) => {
-          form.setError(error.field as "email" | "password", {
-            type: "server",
-            message: error.message,
-          });
-        });
-      } else {
-        toast({
-          description: error.payload.message,
-        });
-      }
+      handleErrorApi({ error, setError: form.setError})
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -142,7 +131,7 @@ const RegisterForm = () => {
             </FormItem>
           )}
         />
-        <Button type="submit">Submit</Button>
+        <Button type="submit" disabled={loading}>Submit</Button>
       </form>
     </Form>
   );
