@@ -1,3 +1,4 @@
+import ButtonLogout from "@/components/common/ButtonLogout";
 import { ModeToggle } from "@/components/custome/ModeToggle";
 import Link from "next/link";
 import React from "react";
@@ -16,6 +17,9 @@ const Header = () => {
           <Link href={"/register"}>
             <p className="font-bold"> Register</p>
           </Link>
+        </li>
+        <li>
+          <ButtonLogout/>
         </li>
       </ul>
 
