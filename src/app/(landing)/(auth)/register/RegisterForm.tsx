@@ -23,9 +23,7 @@ import { handleErrorApi } from "@/lib/utils";
 const RegisterForm = () => {
   const { toast } = useToast();
   const route = useRouter();
-  const [loading, setLoading] = useState<boolean>(false)
-
-
+  const [loading, setLoading] = useState<boolean>(false);
 
   const form = useForm<RegisterType>({
     resolver: zodResolver(RegisterSchema),
@@ -49,19 +47,21 @@ const RegisterForm = () => {
   // }
 
   async function onSubmit(values: RegisterType) {
-    if(loading) return; 
+    if (loading) return;
     setLoading(true);
     try {
       const result = await authApiRequest.register(values);
+
+      await authApiRequest.auth({
+        sessionToken: result.payload.data.token,
+        expiresAt: result.payload.data.expiresAt,
+      });
       toast({
         description: result.payload.message,
       });
-
-      await authApiRequest.auth({ sessionToken: result.payload.data.token });
-
       route.push("/me");
     } catch (error: any) {
-      handleErrorApi({ error, setError: form.setError})
+      handleErrorApi({ error, setError: form.setError });
     } finally {
       setLoading(false);
     }
@@ -131,7 +131,9 @@ const RegisterForm = () => {
             </FormItem>
           )}
         />
-        <Button type="submit" disabled={loading}>Submit</Button>
+        <Button type="submit" disabled={loading}>
+          Submit
+        </Button>
       </form>
     </Form>
   );

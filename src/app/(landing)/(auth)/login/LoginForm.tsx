@@ -20,12 +20,11 @@ import authApiRequest from "@/apiRequest/auth";
 import { useRouter } from "next/navigation";
 import { handleErrorApi } from "@/lib/utils";
 
-
 const LoginForm = () => {
   const { toast } = useToast();
-const route = useRouter()
- 
-const [loading, setLoading] = useState<boolean>(false)
+  const route = useRouter();
+
+  const [loading, setLoading] = useState<boolean>(false);
 
   const form = useForm<LoginType>({
     resolver: zodResolver(LoginSchema),
@@ -36,21 +35,23 @@ const [loading, setLoading] = useState<boolean>(false)
   });
 
   async function onSubmit(values: LoginType) {
-    if(loading) return
-    setLoading(true)
+    if (loading) return;
+    setLoading(true);
     try {
       const result = await authApiRequest.login(values);
+
+      await authApiRequest.auth({
+        sessionToken: result.payload.data.token,
+        expiresAt: result.payload.data.expiresAt,
+      });
       toast({
         description: result.payload.message,
       });
-
-      await authApiRequest.auth({ sessionToken: result.payload.data.token });
-     
-      route.push("/me")
+      route.push("/me");
     } catch (error: any) {
-     handleErrorApi({ error, setError: form.setError})
+      handleErrorApi({ error, setError: form.setError });
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
@@ -91,7 +92,9 @@ const [loading, setLoading] = useState<boolean>(false)
           )}
         />
 
-        <Button type="submit" disabled={loading}>Submit</Button>
+        <Button type="submit" disabled={loading}>
+          Submit
+        </Button>
       </form>
     </Form>
   );

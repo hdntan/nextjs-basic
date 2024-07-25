@@ -6,6 +6,7 @@ import Header from "@/components/common/Header";
 import { Toaster } from "@/components/ui/toaster";
 import AppProvider from "@/app/AppProvider";
 import { cookies } from "next/headers";
+import SlideSession from "@/components/common/SlideSession";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -37,6 +38,8 @@ export default function RootLayout({
 
             <AppProvider initialSessionToken={sessionToken?.value}>
             <Header/>
+            <SlideSession/>
+
             {children}
             </AppProvider>
            

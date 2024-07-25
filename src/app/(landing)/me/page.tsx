@@ -10,7 +10,8 @@ export default async function ProfilePage() {
 
   const result = await accountApiRequest.me(sessionToken?.value ?? "");
 
-  return <div>{result?.payload?.data?.name}
-  <ProfileUser/>
+  return <div>
+    {result?.payload?.data?.name}
+  {/* <ProfileUser/> */}
   </div>;
 }

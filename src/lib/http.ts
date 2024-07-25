@@ -1,29 +1,29 @@
 import envConfig from "@/config";
 import { normalizePath } from "@/lib/utils";
 import { LoginResType } from "@/schemaValidations/auth.schema";
+import { redirect } from "next/navigation";
 
-type CustomOptions = Omit<RequestInit,'method'> & {
+type CustomOptions = Omit<RequestInit, "method"> & {
   baseUrl?: string | undefined;
 };
 
-
-const ENTITY_ERROR_STATUS = 422
+const ENTITY_ERROR_STATUS = 422;
+const AUTHENTICATION_ERROR_STATUS = 401;
 
 type EntityErrorPayload = {
-  message: string,
+  message: string;
   errors: {
-    field: string,
-    message: string
-  }[]
-}
-
+    field: string;
+    message: string;
+  }[];
+};
 
 export class HttpError extends Error {
   status: number;
   payload: {
-    message: string,
-    [key: string]: any
-  }
+    message: string;
+    [key: string]: any;
+  };
 
   constructor({ status, payload }: { status: number; payload?: any }) {
     super("Http Error");
@@ -33,13 +33,19 @@ export class HttpError extends Error {
 }
 
 export class EntityError extends HttpError {
-  status: 422
-  payload: EntityErrorPayload
+  status: 422;
+  payload: EntityErrorPayload;
 
-  constructor({status, payload }: { status: 422; payload: EntityErrorPayload}) {
+  constructor({
+    status,
+    payload,
+  }: {
+    status: 422;
+    payload: EntityErrorPayload;
+  }) {
     super({ status, payload });
-    if(status !== ENTITY_ERROR_STATUS) {
-      throw new Error("Invalid status code for EntityError")
+    if (status !== ENTITY_ERROR_STATUS) {
+      throw new Error("Invalid status code for EntityError");
     }
     this.status = status;
     this.payload = payload;
@@ -48,12 +54,14 @@ export class EntityError extends HttpError {
 
 class SessionToken {
   private token = "";
+  private _expiresAt = new Date().toTimeString();
 
   get value() {
     return this.token;
   }
 
   set value(token: string) {
+    // neu goi method nay o server thi se bi loi
     if (typeof window === "undefined") {
       console.log("🚀 ~ sessionToken ~ setvalue ~ window:", window);
 
@@ -62,9 +70,24 @@ class SessionToken {
 
     this.token = token;
   }
+
+  get expiresAt() {
+    return this._expiresAt;
+  }
+
+  set expiresAt(expiresAt: string) {
+    // neu goi method nay o server thi se bi loi
+
+    if (typeof window === "undefined") {
+      throw new Error("Can not set token on sever side");
+    }
+    this._expiresAt = expiresAt;
+  }
 }
 
 export const clientSessionToken = new SessionToken();
+
+let clientLogoutRequest: null | Promise<any> = null;
 
 const request = async <Response>(
   method: "GET" | "POST" | "PUT" | "DELETE",
@@ -75,7 +98,9 @@ const request = async <Response>(
 
   const baseHeaders = {
     "Content-Type": "application/json",
-    Authorization: clientSessionToken.value ? `Bearer ${clientSessionToken.value}` : '',
+    Authorization: clientSessionToken.value
+      ? `Bearer ${clientSessionToken.value}`
+      : "",
   };
 
   // Neu khong truyen baseurl hoac baseurl = undefine thi lay tu envconfig
@@ -107,24 +132,52 @@ const request = async <Response>(
 
   //Interceptor la noi chung ta xu ly request va response truoc khi tra ve cho phia component
   if (!res.ok) {
-    if(res.status === ENTITY_ERROR_STATUS) {
-      throw new EntityError(data as {
-        status: 422,
-        payload: EntityErrorPayload,
-      });
-    }
-    else {
+    if (res.status === ENTITY_ERROR_STATUS) {
+      throw new EntityError(
+        data as {
+          status: 422;
+          payload: EntityErrorPayload;
+        }
+      );
+    } else if (res.status === AUTHENTICATION_ERROR_STATUS) {
+      if (typeof window !== "undefined") {
+        if (!clientLogoutRequest) {
+          clientLogoutRequest = fetch("/api/auth/logout", {
+            method: "POST",
+            body: JSON.stringify({ force: true }),
+            headers: {
+              ...baseHeaders,
+            },
+          });
+          await clientLogoutRequest;
+          clientSessionToken.value = "";
+          clientSessionToken.expiresAt = new Date().toISOString();
+          clientLogoutRequest = null;
+          location.href = "/login";
+        }
+      } else {
+        const sessionToken = (options?.headers as any)?.Authorization.split(
+          "Bearer "
+        )[1];
+        redirect(`/logout?sessionToken=${sessionToken}`);
+      }
+    } else {
       throw new HttpError(data);
     }
   }
 
-
   //dam bao chi chay o client
-  if(typeof window !== 'undefined') {
-    if(['auth/login','auth/register'].some((item) => item === normalizePath(url))) {
+  if (typeof window !== "undefined") {
+    if (
+      ["auth/login", "auth/register"].some(
+        (item) => item === normalizePath(url)
+      )
+    ) {
       clientSessionToken.value = (payload as LoginResType).data?.token;
-    } else if('auth/logout' === normalizePath(url)) {
-      clientSessionToken.value = '';
+      clientSessionToken.expiresAt = (payload as LoginResType).data?.expiresAt;
+    } else if ("auth/logout" === normalizePath(url)) {
+      clientSessionToken.value = "";
+      clientSessionToken.expiresAt = new Date().toISOString();
     }
   }
 

@@ -8,7 +8,7 @@ export const RegisterSchema = z.object({
         message:'Name must be at most 256 characters.'
     }),
     email: z.string().email(),
-    password: z.string().trim().min(6,  {
+    password: z.string().trim().min(6,  { 
         message:'Name must be at least 6 characters.'
     }).max(100),
     confirmPassword: z.string().trim().min(6).max(100)
@@ -51,3 +51,11 @@ export type LoginType = z.infer<typeof LoginSchema>
 export const LoginRes = RegisterRes
 
 export type LoginResType = z.TypeOf<typeof LoginRes>
+
+export const SlideSessionSchema = z.object({}).strict()
+
+export type SlideSessionType = z.infer<typeof SlideSessionSchema>
+
+export const SlideSessionRes = RegisterRes
+
+export type SlideSessionResType = z.TypeOf<typeof SlideSessionRes>
