@@ -7,6 +7,11 @@ const Header = () => {
   return (
     <div className="flex gap-3 items-center justify-end py-3 px-9">
       <ul className="flex gap-3">
+      <li>
+          <Link href={"/product/add"}>
+            <p className="font-bold"> Product</p>
+          </Link>
+        </li>
         <li>
           <Link href={"/login"}>
             <p className="font-bold"> Login</p>

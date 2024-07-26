@@ -94,14 +94,25 @@ const request = async <Response>(
   url: string,
   options?: CustomOptions | undefined
 ) => {
-  const body = options?.body ? JSON.stringify(options?.body) : undefined;
+  const body = options?.body
+    ? options?.body instanceof FormData
+      ? options.body
+      : JSON.stringify(options?.body)
+    : undefined;
 
-  const baseHeaders = {
-    "Content-Type": "application/json",
-    Authorization: clientSessionToken.value
-      ? `Bearer ${clientSessionToken.value}`
-      : "",
-  };
+  const baseHeaders =
+    options?.body instanceof FormData
+      ? {
+          Authorization: clientSessionToken.value
+            ? `Bearer ${clientSessionToken.value}`
+            : "",
+        }
+      : {
+          "Content-Type": "application/json",
+          Authorization: clientSessionToken.value
+            ? `Bearer ${clientSessionToken.value}`
+            : "",
+        };
 
   // Neu khong truyen baseurl hoac baseurl = undefine thi lay tu envconfig
   // neu truyn vao baeUrl thi lay gia tri truyen vao, neu truyen vao '' thi dong nghia chung ta goi api den nextjs server
@@ -119,7 +130,7 @@ const request = async <Response>(
     headers: {
       ...baseHeaders,
       ...options?.headers,
-    },
+    } as any,
     body,
     method,
   });
@@ -147,7 +158,7 @@ const request = async <Response>(
             body: JSON.stringify({ force: true }),
             headers: {
               ...baseHeaders,
-            },
+            } as any,
           });
           await clientLogoutRequest;
           clientSessionToken.value = "";
