@@ -31,3 +31,6 @@ export const ProductListRes = z.object({
 });
 
 export type ProductListResType = z.infer<typeof ProductListRes>;
+
+export const UpdateProductBody = CreateProductSchema
+export type UpdateProductBodyType = CreateProductType

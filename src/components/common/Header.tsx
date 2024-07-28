@@ -7,11 +7,13 @@ const Header = () => {
   return (
     <div className="flex gap-3 items-center justify-end py-3 px-9">
       <ul className="flex gap-3">
+
       <li>
-          <Link href={"/product/add"}>
+          <Link href={"/product"}>
             <p className="font-bold"> Product</p>
           </Link>
         </li>
+
         <li>
           <Link href={"/login"}>
             <p className="font-bold"> Login</p>
@@ -23,6 +25,7 @@ const Header = () => {
             <p className="font-bold"> Register</p>
           </Link>
         </li>
+        
         <li>
           <ButtonLogout/>
         </li>

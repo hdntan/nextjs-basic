@@ -22,52 +22,94 @@ import { handleErrorApi } from "@/lib/utils";
 import {
   CreateProductSchema,
   CreateProductType,
+  ProductResType,
 } from "@/schemaValidations/product.schema";
 import Image from "next/image";
 import productApiRequest from "@/apiRequest/product";
 
-const ProductAddForm = () => {
+type Product = ProductResType["data"];
+
+const ProductForm = ({ product }: { product?: Product }) => {
   const { toast } = useToast();
   const route = useRouter();
-    const inputRef = useRef<HTMLInputElement | null>(null)
+  const inputRef = useRef<HTMLInputElement | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
-  const [file, setFile] = useState<File | null>(null)
+  const [file, setFile] = useState<File | null>(null);
 
   const form = useForm<CreateProductType>({
     resolver: zodResolver(CreateProductSchema),
     defaultValues: {
-      name: "",
-      description: "",
-      image: "",
-      price: 0,
+      name: product?.name ?? "",
+      description: product?.description ?? "",
+      image: product?.image ?? "",
+      price: product?.price ?? 0,
     },
   });
 
-  async function onSubmit(values: CreateProductType) {
+  const image = form.watch("image");
+
+  const handleCreateProduct = async (values: CreateProductType) => {
     if (loading) return;
     setLoading(true);
     try {
-    console.log("🚀 ~ onSubmit ~ values:", values)
+      console.log("🚀 ~ onSubmit ~ values:", values);
 
-    const formData = new FormData();
-    formData.append("file", file as Blob);
-      
-    const uploadImageResult = await productApiRequest.uploadImage(formData)
-    const imgUrl = uploadImageResult.payload?.data
-    const result = await productApiRequest.create({
-        ... values,
+      const formData = new FormData();
+      formData.append("file", file as Blob);
+
+      const uploadImageResult = await productApiRequest.uploadImage(formData);
+      const imgUrl = uploadImageResult.payload?.data;
+      const result = await productApiRequest.create({
+        ...values,
         image: imgUrl,
-
-    })
+      });
 
       toast({
         description: result.payload.message,
       });
-    //   route.push("/me");
+      route.push("/product");
     } catch (error: any) {
       handleErrorApi({ error, setError: form.setError });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleUpdateProduct = async (_values: CreateProductType) => {
+    if (!product) return;
+
+    setLoading(true);
+    let values = _values;
+    try {
+      console.log("🚀 ~ onSubmit ~ values:", values);
+      if (file) {
+        const formData = new FormData();
+        formData.append("file", file as Blob);
+
+        const uploadImageResult = await productApiRequest.uploadImage(formData);
+        const imgUrl = uploadImageResult.payload?.data;
+        values = { ...values, image: imgUrl };
+      }
+
+      const result = await productApiRequest.update(product?.id, values);
+
+      toast({
+        description: result.payload.message,
+      });
+    } catch (error: any) {
+      handleErrorApi({ error, setError: form.setError });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  async function onSubmit(values: CreateProductType) {
+
+    if(product) {
+      handleUpdateProduct(values);
+    }
+    else {
+      handleCreateProduct(values);
     }
   }
 
@@ -122,56 +164,64 @@ const ProductAddForm = () => {
           )}
         />
 
-<FormField
+        <FormField
           control={form.control}
           name="image"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Image</FormLabel>
               <FormControl>
-                <Input 
-                ref={inputRef}
-                type="file" accept="image/*" placeholder="shadcn" 
-           
-                onChange={(e) => {
-                    const file = e.target?.files?.[0]
-                    if(file) {
-                        setFile(file)
-                        field.onChange(`http://localhost:3000/${file.name}`)
+                <Input
+                  ref={inputRef}
+                  type="file"
+                  accept="image/*"
+                  placeholder="shadcn"
+                  onChange={(e) => {
+                    const file = e.target?.files?.[0];
+                    if (file) {
+                      setFile(file);
+                      field.onChange(`http://localhost:3000/${file.name}`);
                     }
-                }}/>
+                  }}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
 
-        {
-            file && (
-              <div className="mt-3">
-                <Image
-                  src={URL.createObjectURL(file)}
-                  alt={file.name}
-                  width="200"
-                  height="200"
-                  className="object-cover"
-                />
-                <Button type="button" variant={'destructive'} size={'sm'} onClick={() =>{ 
-                    setFile(null)
-                    if(inputRef.current) {
-                        inputRef.current.value =''
-                       }
-                    }}>Delete</Button>
-              </div>
-            )
-        }
+        {(file || image) && (
+          <div className="mt-3">
+            <Image
+              src={file ? URL.createObjectURL(file) : image}
+              alt={"preview"}
+              width="200"
+              height="200"
+              className="object-cover"
+            />
+            <Button
+              type="button"
+              variant={"destructive"}
+              size={"sm"}
+              onClick={() => {
+                setFile(null);
+                form.setValue("image", "");
+                if (inputRef.current) {
+                  inputRef.current.value = "";
+                }
+              }}
+            >
+              Delete
+            </Button>
+          </div>
+        )}
 
         <Button type="submit" disabled={loading}>
-          Submit
+          {product ? "Update" : "Create"}
         </Button>
       </form>
     </Form>
   );
 };
 
-export default ProductAddForm;
+export default ProductForm;
