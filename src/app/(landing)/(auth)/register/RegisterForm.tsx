@@ -59,7 +59,8 @@ const RegisterForm = () => {
       toast({
         description: result.payload.message,
       });
-      route.push("/me");
+      route.push("/");
+      route.refresh();
     } catch (error: any) {
       handleErrorApi({ error, setError: form.setError });
     } finally {

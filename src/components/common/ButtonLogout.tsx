@@ -18,7 +18,9 @@ const handleLogout = async () => {
         handleErrorApi({error});
         authApiRequest.logoutFromNextClientToNextServer(true).then(() => {
           route.push(`/login?redirectFrom=${pathname}`);
-        });
+        }) 
+    } finally {
+      route.refresh()
     }
 }
 

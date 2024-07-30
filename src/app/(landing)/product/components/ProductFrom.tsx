@@ -68,6 +68,7 @@ const ProductForm = ({ product }: { product?: Product }) => {
         description: result.payload.message,
       });
       route.push("/product");
+      route.refresh();
     } catch (error: any) {
       handleErrorApi({ error, setError: form.setError });
     } finally {
@@ -96,6 +97,8 @@ const ProductForm = ({ product }: { product?: Product }) => {
       toast({
         description: result.payload.message,
       });
+      route.refresh();
+
     } catch (error: any) {
       handleErrorApi({ error, setError: form.setError });
     } finally {
